@@ -18,7 +18,7 @@ import javafx.stage.Stage;
 import twitter4j.MediaEntity;
 import twitter4j.Status;
 
-import java.awt.Desktop;
+import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -30,13 +30,13 @@ public class VisualStatus {
     private List<VisualStatus> child;
     private boolean first;
 
-    public VisualStatus(Status status, VisualStatus... child) {
+    VisualStatus(Status status, VisualStatus... child) {
         this.status = status;
         this.child = new ArrayList<>();
         Collections.addAll(this.child, child);
     }
 
-    public void addChild(VisualStatus status){
+    private void addChild(VisualStatus status) {
         if (status==null)return;
         child.add(status);
     }
@@ -56,6 +56,7 @@ public class VisualStatus {
         this.first=true;
     }
 
+    @SuppressWarnings("unused")
     public List<VisualStatus> getChild() {
         return child;
     }

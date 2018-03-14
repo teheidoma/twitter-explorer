@@ -23,22 +23,22 @@ public class Twitter {
     private twitter4j.Twitter twitter;
     private final Saver saver;
 
-    public Twitter() throws TwitterException, IOException {
+    Twitter() throws TwitterException, IOException {
         twitter4j.Twitter twitter = twitter4j.TwitterFactory.getSingleton();
         twitter.setOAuthConsumer("7Lr8A9PEWprzhZLKsYO5C8y6S", "rrO5obfVyuBs5zQlOe86hY3cbADD1D4BZzQj2ohYt4S3MjDMNz");
         saver = new Saver();
         AccessToken accessToken = null;
-        if (saver.isExists()){
-            accessToken=new AccessToken(saver.get("token"), saver.get("secret"), Long.parseLong(saver.get("id")));
-        }else{
-            RequestToken requestToken = twitter.getOAuthRequestToken();
+        if (saver.isExists()) {
+            accessToken = new AccessToken(saver.get("token"), saver.get("secret"), Long.parseLong(saver.get("id")));
+        } else {
+            final RequestToken requestToken = twitter.getOAuthRequestToken();
             Desktop.getDesktop().browse(URI.create(requestToken.getAuthorizationURL()));
-            AtomicBoolean atomicBoolean = new AtomicBoolean(true);
+            final AtomicBoolean atomicBoolean = new AtomicBoolean(true);
             while (atomicBoolean.get()) {
                 try {
-                    TextInputDialog textInputDialog = new TextInputDialog();
-                    textInputDialog.setOnCloseRequest(e ->{
-                        if (textInputDialog.getResult()==null || textInputDialog.getResult().isEmpty()){
+                    final TextInputDialog textInputDialog = new TextInputDialog();
+                    textInputDialog.setOnCloseRequest(e -> {
+                        if (textInputDialog.getResult() == null || textInputDialog.getResult().isEmpty()) {
                             System.exit(1);
                         }
                     });
@@ -46,19 +46,20 @@ public class Twitter {
                     textInputDialog.showAndWait();
                     accessToken = twitter.getOAuthAccessToken(requestToken, textInputDialog.getResult());
                     atomicBoolean.set(false);
-                }catch (Throwable e){
+                } catch (Throwable e) {
                     e.printStackTrace();
                 }
             }
+            assert accessToken != null;
             saver.add("token", accessToken.getToken());
             saver.add("secret", accessToken.getTokenSecret());
             saver.add("id", String.valueOf(accessToken.getUserId()));
             saver.save();
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Для выхода на предыдущее окно используйте Escape.\n" +
-                    "В режиме просмотра твита можно нажать левой клавишой мыши, для открытия картинку в твите\n" +
+            final Alert alert = new Alert(Alert.AlertType.INFORMATION, "Для выхода на предыдущее окно используйте Escape.\n" +
+                    "В режиме просмотра твита можно нажать левой клавишой мыши, для открытия картинки в твите\n" +
                     "или правой для открытия в бразуре.", ButtonType.OK);
             alert.getDialogPane().setHeaderText("Краткий экскурс");
-            ImageView graphic = new ImageView(new Image(getClass().getClassLoader().getResourceAsStream("hello.png"), 300, 300, false, false));
+            final ImageView graphic = new ImageView(new Image(getClass().getClassLoader().getResourceAsStream("hello.png"), 300, 300, false, false));
             alert.getDialogPane().setGraphic(graphic);
             alert.setTitle("Краткий экскурс");
             alert.showAndWait();
@@ -67,27 +68,27 @@ public class Twitter {
         this.twitter = twitter;
     }
 
-    public void logout(){
+    public void logout() {
         saver.delete();
     }
 
     public VisualStatus getDiscussion(long tweet) throws TwitterException {
-        VisualStatus visualStatus =new VisualStatus(twitter.tweets().showStatus(tweet));
+        final VisualStatus visualStatus = new VisualStatus(twitter.tweets().showStatus(tweet));
         visualStatus.addChild(getChildDiscussion(visualStatus.getStatus().getId()));
         visualStatus.setFirst();
         return visualStatus;
     }
 
     private VisualStatus[] getChildDiscussion(long tweet) throws TwitterException {
-        List<Status> statusAfter = getStatusAfter(tweet);
-        if (statusAfter.size()==0)return null;
+        final List<Status> statusAfter = getStatusAfter(tweet);
+        if (statusAfter.size() == 0) return null;
 
-        if (statusAfter.size()==1){
-            VisualStatus visualStatus =new VisualStatus(statusAfter.get(0));
+        if (statusAfter.size() == 1) {
+            final VisualStatus visualStatus = new VisualStatus(statusAfter.get(0));
             visualStatus.addChild(getChildDiscussion(statusAfter.get(0).getId()));
             return new VisualStatus[]{visualStatus};
-        }else{
-            VisualStatus[] visualStatuses = new VisualStatus[statusAfter.size()];
+        } else {
+            final VisualStatus[] visualStatuses = new VisualStatus[statusAfter.size()];
             for (int i = 0; i < statusAfter.size(); i++) {
                 VisualStatus status1 = new VisualStatus(statusAfter.get(i));
                 visualStatuses[i] = status1;
@@ -98,9 +99,9 @@ public class Twitter {
     }
 
     private List<Status> getStatusAfter(Status status) throws TwitterException {
-        List<Status> list = new ArrayList<>();
-        Query query = new Query("to:" + status.getUser().getScreenName()+" since_id:"+status.getId());
-        QueryResult results = null;
+        final List<Status> list = new ArrayList<>();
+        Query query = new Query("to:" + status.getUser().getScreenName() + " since_id:" + status.getId());
+        QueryResult results;
         do {
             results = twitter.search(query);
             List<Status> tweets = results.getTweets();

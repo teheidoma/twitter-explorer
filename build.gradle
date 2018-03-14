@@ -1,14 +1,18 @@
 group 'com.teheidoma'
-version '0.1'
+version '0.2'
 
 apply plugin: 'java'
 apply plugin: 'launch4j'
 
 sourceCompatibility = 1.8
 
+createExe.doFirst {
+    println("${projectDir}\\ico.ico")
+}
+
 launch4j {
     mainClassName = "com.teheidoma.twitter.Main"
-    icon = ""
+    icon = "${projectDir}\\ico.ico"
     bundledJrePath = "C:\\Program Files (x86)\\Java\\jre1.8.0_161"
 }
 

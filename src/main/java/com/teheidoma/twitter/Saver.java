@@ -4,15 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class Saver {
     private File file;
     private Properties properties;
     private boolean exists;
 
-    public Saver() {
+    Saver() {
         this.file= new File(System.getProperty("user.home")+"/twitter.properties");
         this.properties = new Properties();
         this.exists = checkExists();
