@@ -1,20 +1,27 @@
 group 'com.teheidoma'
-version '0.2'
+version '0.3'
 
 apply plugin: 'java'
 apply plugin: 'launch4j'
 
 sourceCompatibility = 1.8
 
-createExe.doFirst {
-    println("${projectDir}\\ico.ico")
-}
 
-launch4j {
-    mainClassName = "com.teheidoma.twitter.Main"
-    icon = "${projectDir}\\ico.ico"
-    bundledJrePath = "C:\\Program Files (x86)\\Java\\jre1.8.0_161"
+task execJar(type:Jar){
+    manifest {
+        attributes 'Main-Class': 'com.teheidoma.twitter.Main',
+                "App-version" : version
+    }
+    baseName = project.name + '-exec'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
+//
+//launch4j {
+//    mainClassName = "com.teheidoma.twitter.Main"
+//    icon = "${projectDir}\\ico.ico"
+//    bundledJrePath = ".\\jre"
+//}
 
 buildscript {
     repositories {

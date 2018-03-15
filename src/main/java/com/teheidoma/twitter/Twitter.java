@@ -72,11 +72,25 @@ public class Twitter {
         saver.delete();
     }
 
+    public boolean hasTweet(long tweet) {
+        try {
+            return twitter.tweets().showStatus(tweet) != null;
+        } catch (TwitterException e) {
+            new Alert(Alert.AlertType.WARNING, "Такого твита не сущевтсвует");
+            return false;
+        }
+    }
+
     public VisualStatus getDiscussion(long tweet) throws TwitterException {
-        final VisualStatus visualStatus = new VisualStatus(twitter.tweets().showStatus(tweet));
-        visualStatus.addChild(getChildDiscussion(visualStatus.getStatus().getId()));
-        visualStatus.setFirst();
-        return visualStatus;
+        if (hasTweet(tweet)) {
+            final VisualStatus visualStatus = new VisualStatus(twitter.tweets().showStatus(tweet));
+            visualStatus.addChild(getChildDiscussion(visualStatus.getStatus().getId()));
+            visualStatus.setFirst();
+            return visualStatus;
+        } else {
+            return null;
+        }
+
     }
 
     private VisualStatus[] getChildDiscussion(long tweet) throws TwitterException {

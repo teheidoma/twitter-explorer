@@ -1,11 +1,10 @@
 package com.teheidoma.twitter;
 
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Group;
-import javafx.scene.Scene;
+import javafx.scene.Parent;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -16,28 +15,84 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-import javafx.stage.Stage;
 import twitter4j.TwitterException;
 
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URI;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.net.URL;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class Main extends Application {
-    public static void main(String[] args) {
-        launch(args);
+public class Main {
+    private static final float VERSION = 0.3f;
+    private SceneManager sceneManager;
+
+    public static void checkVersion() {
+        try {
+            HttpURLConnection httpURLConnection = (HttpURLConnection) new URL("https://raw.githubusercontent.com/teheidoma/twitter-explorer/master/build.gradle").openConnection();
+            httpURLConnection.setRequestMethod("GET");
+            httpURLConnection.connect();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+            AtomicReference<Float> newVer = new AtomicReference<>((float) 0);
+            reader.lines().forEach(l -> {
+                if (l.startsWith("version")) {
+                    newVer.set(Float.parseFloat(l.replaceAll("(version( *)')|(')", "")));
+                }
+            });
+            if (VERSION < newVer.get())
+                Platform.runLater(() -> new Alert(Alert.AlertType.INFORMATION, "Доступна новая версия!").show());
+        } catch (IOException e) {
+
+        }
     }
 
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        final Twitter twitter = new Twitter();
+    public static void main(String[] args) {
+        new Main().start();
+        new Timer(true).schedule(new TimerTask() {
+            @Override
+            public void run() {
+                checkVersion();
+            }
+        }, 6000);
+    }
+
+    public void start() {
+        try {
+            final Twitter twitter = new Twitter();
+            SceneManager.launchThis(() -> {
+                this.sceneManager = SceneManager.getInstance();
+                sceneManager.addScene("main", getMain(twitter));
+                sceneManager.addScene("load", getLoad());
+                sceneManager.changeScene("main");
+            });
+        } catch (TwitterException e) {
+            new Alert(Alert.AlertType.ERROR, "Хм... похоже что-то произошло с твиттером");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Parent getLoad() {
+        final ImageView imageView = new ImageView();
+        imageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("load.gif")));
+        return new Group(imageView);
+    }
+
+    private Parent getMain(Twitter twitter) {
         final VBox vBox = new VBox();
         final TextField textField = new TextField();
-
-
         final Button exitBtn = new Button("Выйти из аккаунта");
         final Hyperlink hyperlink = new Hyperlink("@teheidoma");
+        final Pane hSpace = new Pane();
+        final HBox hBox = new HBox(exitBtn, hSpace, hyperlink);
+        final Group main = new Group(vBox);
+
+
         exitBtn.setOnAction(e -> {
             twitter.logout();
             System.exit(1);
@@ -50,56 +105,37 @@ public class Main extends Application {
             }
         });
         hyperlink.setFont(new Font(10));
-        final Pane hSpace = new Pane();
         HBox.setHgrow(hSpace, Priority.ALWAYS);
-        HBox hBox = new HBox(exitBtn, hSpace, hyperlink);
+
         vBox.getChildren().addAll(new Label("Введите ссылку на твит: "), textField, hBox);
         vBox.setPrefSize(300, 40);
-        final Group main = new Group(vBox);
 
-        final ImageView imageView = new ImageView();
-        imageView.setImage(new Image(getClass().getClassLoader().getResourceAsStream("load.gif")));
-        final Group loading = new Group(imageView);
 
-        final Scene mainScene = new Scene(main);
-        final AtomicBoolean content = new AtomicBoolean(false);
-        textField.setOnAction(e -> {
+        textField.setOnKeyTyped(e -> {
+            if (e.getCode().equals(KeyCode.ESCAPE)) return;
             if (textField.getText().matches("(.*)twitter.com/(.*)/status/(\\d*)")) {
                 String[] split = textField.getText().split("/");
-                mainScene.setRoot(loading);
-                primaryStage.sizeToScene();
-                primaryStage.centerOnScreen();
+                sceneManager.changeScene("load");
                 Thread thread = new Thread(() -> {
                     Group value = null;
+                    String tweetId = split[split.length - 1];
                     try {
-                        value = new Group(twitter.getDiscussion(Long.parseLong(split[split.length - 1])).node());
+                        value = new Group(twitter.getDiscussion(Long.parseLong(tweetId)).node());
                     } catch (TwitterException e1) {
                         e1.printStackTrace();
+                        return;
                     }
                     Group finalValue = value;
+
                     Platform.runLater(() -> {
-                        mainScene.setRoot(finalValue);
-                        primaryStage.sizeToScene();
-                        primaryStage.centerOnScreen();
-                        primaryStage.setTitle("Twitter-explorer");
-                        content.set(true);
+                        sceneManager.addScene("tweet-" + tweetId, finalValue);
+                        sceneManager.changeScene("tweet-" + tweetId);
                     });
 
                 });
                 thread.start();
             }
         });
-        mainScene.setOnKeyReleased(eee -> {
-            if (eee.getCode().equals(KeyCode.ESCAPE) && content.get()) {
-                mainScene.setRoot(main);
-                primaryStage.sizeToScene();
-                primaryStage.centerOnScreen();
-                content.set(false);
-            }
-        });
-        primaryStage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("ico.png")));
-        primaryStage.setTitle("Twitter-explorer");
-        primaryStage.setScene(mainScene);
-        primaryStage.show();
+        return main;
     }
 }

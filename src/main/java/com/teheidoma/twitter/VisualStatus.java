@@ -26,8 +26,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class VisualStatus {
-    private Status status;
-    private List<VisualStatus> child;
+    private final Status status;
+    private final List<VisualStatus> child;
     private boolean first;
 
     VisualStatus(Status status, VisualStatus... child) {
@@ -62,14 +62,14 @@ public class VisualStatus {
     }
 
     public Node node(){
-        VBox vBox1 = new VBox();
+        final VBox vBox1 = new VBox();
         for (VisualStatus m: child) {
             vBox1.getChildren().add(m.node());
         }
 
         vBox1.setPadding(new Insets(0.0, 0.0, 0.0, 10));
 
-        Label label = new Label(status.getUser().getScreenName() + ": " + status.getText().replace("\n", " "));
+        final Label label = new Label(status.getUser().getScreenName() + ": " + status.getText().replace("\n", " "));
 
         label.setOnMouseClicked(e -> {
             if (e.getButton().equals(MouseButton.PRIMARY)) {
@@ -102,13 +102,13 @@ public class VisualStatus {
                 }
             }
         });
-        VBox vBox = new VBox(label, vBox1);
+        final VBox vBox = new VBox(label, vBox1);
         label.setOnMouseEntered(e -> vBox.setEffect(new Glow(0.5)));
         label.setOnMouseExited(e -> {
             vBox.setEffect(null);
 //                vBox.setEffect(new Shadow(0,0));
         });
-        HBox hBox = new HBox();
+        final HBox hBox = new HBox();
         if (!first) {
             Separator separator = new Separator(Orientation.VERTICAL);
             separator.setEffect(new Glow(0.5));
