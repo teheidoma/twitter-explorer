@@ -60,6 +60,10 @@ public class SceneManager extends Application {
         return scene;
     }
 
+    public boolean hasScene(String name) {
+        return map.containsKey(name);
+    }
+
     public boolean changeScene(String name) {
         Parent parent = map.get(name);
         if (parent == null) return false;

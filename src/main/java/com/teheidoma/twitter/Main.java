@@ -115,10 +115,14 @@ public class Main {
             if (e.getCode().equals(KeyCode.ESCAPE)) return;
             if (textField.getText().matches("(.*)twitter.com/(.*)/status/(\\d*)")) {
                 String[] split = textField.getText().split("/");
+                String tweetId = split[split.length - 1];
                 sceneManager.changeScene("load");
+                if (sceneManager.hasScene("tweet-" + tweetId)) {
+                    sceneManager.changeScene("tweet-" + tweetId);
+                    return;
+                }
                 Thread thread = new Thread(() -> {
                     Group value = null;
-                    String tweetId = split[split.length - 1];
                     try {
                         value = new Group(twitter.getDiscussion(Long.parseLong(tweetId)).node());
                     } catch (TwitterException e1) {
