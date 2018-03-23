@@ -62,19 +62,18 @@ public class Main {
     }
 
     public void start() {
-        try {
-            final Twitter twitter = new Twitter();
-            SceneManager.launchThis(() -> {
-                this.sceneManager = SceneManager.getInstance();
-                sceneManager.addScene("main", getMain(twitter));
-                sceneManager.addScene("load", getLoad());
-                sceneManager.changeScene("main");
-            });
-        } catch (TwitterException e) {
-            new Alert(Alert.AlertType.ERROR, "’м... похоже что-то произошло с твиттером");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        SceneManager.launchThis(() -> {
+            Twitter twitter = null;
+            try {
+                twitter = new Twitter();
+            } catch (TwitterException | IOException e) {
+                e.printStackTrace();
+            }
+            this.sceneManager = SceneManager.getInstance();
+            sceneManager.addScene("main", getMain(twitter));
+            sceneManager.addScene("load", getLoad());
+            sceneManager.changeScene("main");
+        });
     }
 
     private Parent getLoad() {

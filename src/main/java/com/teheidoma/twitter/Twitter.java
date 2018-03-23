@@ -1,5 +1,6 @@
 package com.teheidoma.twitter;
 
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextInputDialog;
@@ -76,7 +77,9 @@ public class Twitter {
         try {
             return twitter.tweets().showStatus(tweet) != null;
         } catch (TwitterException e) {
-            new Alert(Alert.AlertType.WARNING, "Такого твита не сущевтсвует");
+            Platform.runLater(() -> {
+                new Alert(Alert.AlertType.WARNING, "Такого твита не сущевтсвует").show();
+            });
             return false;
         }
     }
@@ -113,13 +116,15 @@ public class Twitter {
     }
 
     private List<Status> getStatusAfter(Status status) throws TwitterException {
+        System.out.println("getStatusAfter " + status.getText());
         final List<Status> list = new ArrayList<>();
-        Query query = new Query("to:" + status.getUser().getScreenName() + " since_id:" + status.getId());
+        Query query = new Query("to:" + status.getUser().getScreenName());
+        query.setSinceId(status.getId());
+        query.setCount(100);
         QueryResult results;
         do {
             results = twitter.search(query);
             List<Status> tweets = results.getTweets();
-
             for (Status tweet : tweets)
                 if (tweet.getInReplyToStatusId() == status.getId())
                     list.add(tweet);
